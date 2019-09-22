@@ -11,7 +11,7 @@ class GenerateXml
      * 根据array生成XML
      * @param $xmlData
      */
-    public function generate($filePath = '', $xmlData = [], $attribute = [], $topLable = '')
+    public function generate($filePath = '', $xmlData = [], $topLable = '', $attribute = [])
     {
 
         $doc = new \DOMDocument('1.0', 'utf-8');//引入类并且规定版本编码

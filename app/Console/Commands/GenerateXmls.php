@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Medical\Doctor;
 use App\Models\Medical\DoctorVideo;
+use App\Services\GenerateRecordXml;
 use App\Services\GenerateSiteMap;
 use App\Services\GenerateXml;
 use Carbon\Carbon;
@@ -39,6 +40,12 @@ class GenerateXmls extends Command
     protected $filePath;
 
     /**
+     * 生成文件存储位置
+     * @var string
+     */
+    protected $recordPath;
+
+    /**
      * 访问url
      * @var
      */
@@ -55,6 +62,7 @@ class GenerateXmls extends Command
 
         $this->filePath = storage_path('xml/test.xml');
         $this->indexPath = storage_path('xml/sitemap.xml');
+        $this->recordPath = storage_path('xml/record.xml');
         $this->url = 'https://www.jiankang.com/';
     }
 
@@ -102,7 +110,7 @@ class GenerateXmls extends Command
         ];
         $topLable = 'urlset';
         $xml = new GenerateXml();
-        $xml->generate($this->filePath, $list, $attribute, $topLable);
+        $xml->generate($this->filePath, $list, $topLable, $attribute);
 
         $map = [];
         $map['sitemap']['loc'] = $this->url . $this->filePath;
@@ -111,7 +119,20 @@ class GenerateXmls extends Command
 
         $mapXml = new GenerateSiteMap();
         $topLable = 'sitemapindex';
-        $mapXml->generate($this->indexPath, $map,$topLable, $attribute, );
+        $mapXml->generate($this->indexPath, $map, $topLable, $attribute);
+
+
+        $record = [];
+        $record['record'] = [
+            'path' => $this->filePath,
+            'loc' => $this->url . $this->filePath,
+            'create_time' => Carbon::now()->toDateTimeString(),
+            'count' => count($data),
+            'last_id' => last($data)['id'],
+            'last_element_create_time' => Carbon::createFromTimestamp(last($data)['add_time'])->toDateTimeString()
+        ];
+        $recordXml = new GenerateRecordXml();
+        $recordXml->generate($this->recordPath, $record);
 
 
     }

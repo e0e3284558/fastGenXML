@@ -2,23 +2,23 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
-class GenerateSiteMap
+class GenerateRecordXml
 {
     /**
      * 根据array生成XML
      * @param $xmlData
      */
-    public function generate($filePath = '', $xmlData = [], $topLable = '', $attribute = [])
+    public function generate($filePath = '', $xmlData = [], $topLable = 'record')
     {
         $this->fileExists($filePath, $topLable);
         $doc = new \DOMDocument();
         $doc->load($filePath);
         $sitemap = $doc->getElementsByTagName($topLable)->item(0);  //找到文件追加的位置
-
         foreach ($xmlData as $key => $value) {
             $newsitemap = $doc->createElement($key);
             foreach ($value as $k => $v) {
@@ -31,6 +31,18 @@ class GenerateSiteMap
             $newsitemap->appendChild($comment);
         }
         $sitemap->appendChild($newsitemap);
+        $monthCount = $doc->getElementsByTagName('_' . Carbon::now()->toDateString())->item(0);
+        $monthCountValue = $monthCount->nodeValue;
+        if ($monthCountValue) {
+            $monthCount->nodeValue = intval($monthCountValue) + count($xmlData);
+        } else {
+            $monthCount = $doc->getElementsByTagName('monthCount');
+            $monthCountElement = $doc->createElement('_' . Carbon::now()->toDateString());
+            $monthCountValue = $doc->createTextNode(count($xmlData));
+            $monthCountElement = $monthCountElement->appendChild($monthCountValue);
+            $monthCount->item(0)->appendChild($monthCountElement);
+        }
+
         $doc->appendChild($sitemap);
         $doc->save($filePath);
     }
@@ -47,8 +59,8 @@ class GenerateSiteMap
         if (!File::exists($filePath)) {
             $doc = new \DOMDocument('1.0', 'utf-8');
             $grandFather = $doc->createElement($topLable);
-            $content = $doc->createTextNode('');
-            $grandFather->appendChild($content);
+            $month = $doc->createElement('month');
+            $grandFather->appendChild($month);
             $doc->appendChild($grandFather);
             $doc->save($filePath);
         }
