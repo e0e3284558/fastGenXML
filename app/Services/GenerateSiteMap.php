@@ -16,10 +16,19 @@ class GenerateSiteMap
         $this->fileExists($filePath, $topLable);
         $doc = new \DOMDocument();
         $doc->load($filePath);
-        $newsitemap = $doc->createElement('sitemap');
         $sitemap = $doc->getElementsByTagName($topLable)->item(0);  //找到文件追加的位置
-        $comment = $doc->createTextNode('asa');
-        $newsitemap->appendChild($comment);
+
+        foreach ($xmlData as $key => $value) {
+            $newsitemap = $doc->createElement($key);
+            foreach ($value as $k => $v) {
+                $elementName = $doc->createElement($k);
+                $textValue = $doc->createTextNode($v);
+                $elementName->appendChild($textValue);
+                $newsitemap->appendChild($elementName);
+            }
+            $comment = $doc->createTextNode('');
+            $newsitemap->appendChild($comment);
+        }
         $sitemap->appendChild($newsitemap);
         $doc->appendChild($sitemap);
         $doc->save($filePath);
