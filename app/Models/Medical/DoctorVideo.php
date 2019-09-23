@@ -8,14 +8,17 @@ class DoctorVideo extends Model
 {
     protected $table = 'doctor_video';
 
-
     /**
      *
      */
-    public function getVideoData()
+    public function getVideoData($last_id, $limit = 1000)
     {
-        return $this->with('info', 'doctor', 'doctor.config', 'doctor.fristKeshi', 'doctor.secondKeshi','hospital')
-            ->limit(100)->get()->toArray();
+        return $this->where('id', '>', $last_id)
+            ->with('info', 'doctor', 'doctor.config', 'doctor.fristKeshi', 'doctor.secondKeshi', 'hospital')
+            ->limit($limit)
+            ->get()
+            ->orderBy('id', 'asc')
+            ->toArray();
     }
 
     /**
@@ -43,7 +46,6 @@ class DoctorVideo extends Model
     public function hospital()
     {
         return $this->hasOne(Hospital::class, 'id', 'hospital_id');
-
     }
 
 

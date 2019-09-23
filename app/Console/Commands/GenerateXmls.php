@@ -59,8 +59,8 @@ class GenerateXmls extends Command
     public function __construct()
     {
         parent::__construct();
-
-        $this->filePath = storage_path('xml/test.xml');
+        $timestamp = Carbon::now()->timestamp;
+        $this->filePath = storage_path("xml/test_{$timestamp}.xml");
         $this->indexPath = storage_path('xml/sitemap.xml');
         $this->recordPath = storage_path('xml/record.xml');
         $this->url = 'https://www.jiankang.com/';
@@ -73,8 +73,10 @@ class GenerateXmls extends Command
      */
     public function handle()
     {
+        // 读取上次生成的xml last_id
+        $last_id = (new GenerateRecordXml())->getLastRecord($this->recordPath);
         $doctorVideo = new DoctorVideo();
-        $data = $doctorVideo->getVideoData();
+        $data = $doctorVideo->getVideoData($last_id, 1000);
         $list = [];
         foreach ($data as $key => $val) {
             $list[$key]['url']['loc'] = 'www.jiankang.com/111';
@@ -102,6 +104,7 @@ class GenerateXmls extends Command
             $list[$key]['url']['data']['dispaly']['asd']['showurl'] = 'https://asdasd.com';
             $list[$key]['url']['data']['dispaly']['asd']['mipurl'] = 'https://asdasd.com';
         }
+
         $attribute = [
             'urlset' => [
                 'key' => 'content_method',
@@ -112,6 +115,7 @@ class GenerateXmls extends Command
         $xml = new GenerateXml();
         $xml->generate($this->filePath, $list, $topLable, $attribute);
 
+        // 生成sitemap
         $map = [];
         $map['sitemap']['loc'] = $this->url . $this->filePath;
         $map['sitemap']['lastmod'] = Carbon::now()->toDateString();
@@ -122,6 +126,7 @@ class GenerateXmls extends Command
         $mapXml->generate($this->indexPath, $map, $topLable, $attribute);
 
 
+        // 生成记录
         $record = [];
         $record['record'] = [
             'path' => $this->filePath,
@@ -132,8 +137,6 @@ class GenerateXmls extends Command
             'last_element_create_time' => Carbon::createFromTimestamp(last($data)['add_time'])->toDateTimeString()
         ];
         $recordXml = new GenerateRecordXml();
-        $recordXml->generate($this->recordPath, $record);
-
-
+        $recordXml->generate($this->recordPath, $record, count($data));
     }
 }
